@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pastel Music Player</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fef6f6;
+      color: #444;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .player {
+      background: #fffaf3;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 340px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    .controls button {
+      font-size: 24px;
+      margin: 10px;
+      background-color: #ffe5ec;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #444;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .controls button:hover {
+      background-color: #ffd6e0;
+    }
+
+    .progress-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    #progress {
+      width: 100%;
+      margin: 0 10px;
+      accent-color: #ffb3c6;
+    }
+
+    .volume-container {
+      margin-top: 15px;
+    }
+
+    #volume {
+      width: 100%;
+      accent-color: #ffb3c6;
+    }
+
+    .upload-container {
+      margin-top: 20px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+      color: #444;
+      background-color: #fff0f5;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ffcdd2;
+    }
+
+    input[type="file"]::file-selector-button {
+      background-color: #ffd6e0;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background-color: #ffb3c6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player">
+    <h2 id="title">No Track Selected</h2>
+    <audio id="audio" src=""></audio>
+
+    <div class="controls">
+      <button id="prev">⏮️</button>
+      <button id="play">▶️</button>
+      <button id="next">⏭️</button>
+    </div>
+
+    <div class="progress-container">
+      <span id="current-time">0:00</span>
+      <input type="range" id="progress" value="0" />
+      <span id="duration">0:00</span>
+    </div>
+
+    <div class="volume-container">
+      <label for="volume">🔊 Volume</label>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="1" />
+    </div>
+
+    <div class="upload-container">
+      <label for="fileUpload">🎵 Upload MP3(s):</label><br/>
+      <input type="file" id="fileUpload" multiple accept="audio/*" />
+    </div>
+  </div>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('play');
+    const nextBtn = document.getElementById('next');
+    const prevBtn = document.getElementById('prev');
+    const progress = document.getElementById('progress');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration');
+    const volumeSlider = document.getElementById('volume');
+    const title = document.getElementById('title');
+    const fileUpload = document.getElementById('fileUpload');
+
+    let songs = [];
+    let songIndex = 0;
+
+    function loadSong(index) {
+      if (!songs[index]) return;
+      const song = songs[index];
+      title.textContent = song.name;
+      audio.src = song.url;
+    }
+
+    function playSong() {
+      audio.play();
+      playBtn.textContent = '⏸️';
+    }
+
+    function pauseSong() {
+      audio.pause();
+      playBtn.textContent = '▶️';
+    }
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        playSong();
+      } else {
+        pauseSong();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (songs.length === 0) return;
+      songIndex = (songIndex + 1) % songs.length;
+      loadSong(songIndex);
+      playSong();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (songs.length === 0) return;
+      songIndex = (songIndex - 1 + songs.length) % songs.length;
+      loadSong(songIndex);
+      playSong();
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      const { currentTime, duration } = audio;
+      if (duration) {
+        progress.value = (currentTime / duration) * 100;
+        currentTimeEl.textContent = formatTime(currentTime);
+        durationEl.textContent = formatTime(duration);
+      }
+    });
+
+    progress.addEventListener('input', () => {
+      const { duration } = audio;
+      if (duration) {
+        audio.currentTime = (progress.value / 100) * duration;
+      }
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      audio.volume = volumeSlider.value;
+    });
+
+    function formatTime(time) {
+      if (isNaN(time)) return '0:00';
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    fileUpload.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      songs = files.map(file => ({
+        name: file.name,
+        url: URL.createObjectURL(file)
+      }));
+      songIndex = 0;
+      loadSong(songIndex);
+      playSong();
+    });
+  </script>
+</body>
+</html>
