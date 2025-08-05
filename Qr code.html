@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QR Code Generator</title>
+    <style>
+      body {
+        background: #f9f3e7;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+        padding: 40px 20px;
+        color: #5a4d3f;
+      }
+      h1 {
+        margin-bottom: 20px;
+      }
+      input[type="text"] {
+        padding: 12px;
+        width: 300px;
+        max-width: 90%;
+        border: 2px solid #d8c3a5;
+        border-radius: 10px;
+        font-size: 1rem;
+      }
+      button {
+        margin-left: 10px;
+        padding: 12px 20px;
+        border: none;
+        background: #d8c3a5;
+        color: #5a4d3f;
+        font-weight: bold;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #c4b085;
+      }
+      #qrcode {
+        margin-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>QR Code Generator</h1>
+
+    <input type="text" id="text" placeholder="Enter text or URL" />
+    <button id="generateBtn">Generate</button>
+
+    <div id="qrcode"></div>
+
+    <!-- QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+      const qrContainer = document.getElementById("qrcode");
+      const input = document.getElementById("text");
+      const btn = document.getElementById("generateBtn");
+      let qrCode;
+
+      function generateQR() {
+        const text = input.value.trim();
+        if (!text) {
+          alert("Please enter some text or URL");
+          return;
+        }
+
+        // Clear previous QR
+        qrContainer.innerHTML = "";
+
+        qrCode = new QRCode(qrContainer, {
+          text: text,
+          width: 200,
+          height: 200,
+          colorDark: "#5a4d3f",
+          colorLight: "#f9f3e7",
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      }
+
+      btn.addEventListener("click", generateQR);
+
+      // Optional: generate on enter key
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          generateQR();
+        }
+      });
+    </script>
+  </body>
+</html>

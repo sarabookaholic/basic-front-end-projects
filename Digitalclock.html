@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Digital Clock</title>
+    <style>
+      :root {
+        --bg-light: #f0f0f0;
+        --text-light: #333;
+        --bg-dark: #222;
+        --text-dark: #eee;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg-light);
+        color: var(--text-light);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      body.dark {
+        background: var(--bg-dark);
+        color: var(--text-dark);
+      }
+
+      .clock-container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 30px 50px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: background 0.3s, box-shadow 0.3s;
+      }
+
+      body.dark .clock-container {
+        background: rgba(30, 30, 30, 0.8);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+      }
+
+      .time {
+        font-size: 72px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+      }
+
+      .date {
+        font-size: 20px;
+        font-weight: 500;
+        margin-bottom: 25px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        background: #6ab04c;
+        color: white;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background: #4a7c2b;
+      }
+
+      body.dark button {
+        background: #3c6e71;
+      }
+
+      body.dark button:hover {
+        background: #285149;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="clock-container">
+      <div class="time" id="time">00:00:00</div>
+      <div class="date" id="date">Loading date...</div>
+      <div class="controls">
+        <button id="toggleFormatBtn">Switch to 24-hour</button>
+        <button id="toggleThemeBtn">Dark Mode</button>
+      </div>
+    </div>
+
+    <script>
+      const timeEl = document.getElementById("time");
+      const dateEl = document.getElementById("date");
+      const toggleFormatBtn = document.getElementById("toggleFormatBtn");
+      const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+
+      let is24Hour = false;
+
+      function updateTime() {
+        const now = new Date();
+
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let seconds = now.getSeconds();
+        let ampm = "";
+
+        if (!is24Hour) {
+          ampm = hours >= 12 ? " PM" : " AM";
+          hours = hours % 12 || 12; // convert to 12-hour format
+        }
+
+        // Pad numbers
+        hours = hours.toString().padStart(2, "0");
+        minutes = minutes.toString().padStart(2, "0");
+        seconds = seconds.toString().padStart(2, "0");
+
+        timeEl.textContent = `${hours}:${minutes}:${seconds}${ampm}`;
+
+        // Date formatting
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        dateEl.textContent = now.toLocaleDateString(undefined, options);
+      }
+
+      toggleFormatBtn.addEventListener("click", () => {
+        is24Hour = !is24Hour;
+        toggleFormatBtn.textContent = is24Hour
+          ? "Switch to 12-hour"
+          : "Switch to 24-hour";
+        updateTime();
+      });
+
+      toggleThemeBtn.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains("dark");
+        toggleThemeBtn.textContent = isDark ? "Light Mode" : "Dark Mode";
+      });
+
+      // Initialize
+      updateTime();
+      setInterval(updateTime, 1000);
+    </script>
+  </body>
+</html>

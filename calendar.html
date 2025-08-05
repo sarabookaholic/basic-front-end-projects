@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Light Pastel Calendar with Peach Blossom Animation</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: #fff7f5; /* very light pinkish */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  /* Container for petals */
+  .petals {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  /* Petal styling */
+  .petal {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(ellipse at center, #ffd6d6 40%, #f9baba 90%);
+    border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 2px rgba(255,182,193,0.7));
+    animation-name: fall, sway, spin;
+    animation-timing-function: linear, ease-in-out, linear;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes fall {
+    0% {
+      top: -30px;
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.85;
+    }
+    100% {
+      top: 110vh;
+      opacity: 0;
+    }
+  }
+
+  @keyframes sway {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(15px);
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Calendar styling */
+  .calendar {
+    position: relative;
+    background: #fff0f0; /* very soft pink */
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(255, 182, 193, 0.5);
+    padding: 20px 25px;
+    width: 320px;
+    z-index: 1;
+  }
+
+  .calendar header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .calendar header button {
+    background: #f9baba; /* pastel pink */
+    border: none;
+    color: #800000; /* dark red */
+    font-size: 18px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s;
+  }
+
+  .calendar header button:hover {
+    background: #f08080;
+  }
+
+  .calendar header h2 {
+    margin: 0;
+    font-weight: 700;
+    color: #800000; /* dark red */
+  }
+
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #d87b7b;
+    font-weight: 600;
+  }
+
+  .days div {
+    user-select: none;
+  }
+
+  .dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .dates div {
+    padding: 10px 0;
+    border-radius: 8px;
+    user-select: none;
+    cursor: default;
+    transition: background-color 0.3s ease;
+    color: #800000;
+  }
+
+  .dates div:hover {
+    background: #f9baba;
+    color: #800000;
+  }
+
+  .dates .today {
+    background: #f08080;
+    color: white;
+    font-weight: 700;
+  }
+
+  .dates .not-current {
+    color: #f4c7c7;
+  }
+</style>
+</head>
+<body>
+
+<div class="petals" id="petals"></div>
+
+<div class="calendar">
+  <header>
+    <button id="prevBtn">&#8592;</button>
+    <h2 id="monthYear"></h2>
+    <button id="nextBtn">&#8594;</button>
+  </header>
+
+  <div class="days">
+    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+  </div>
+
+  <div class="dates" id="dates"></div>
+</div>
+
+<script>
+  const monthYear = document.getElementById('monthYear');
+  const datesContainer = document.getElementById('dates');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const petalsContainer = document.getElementById('petals');
+
+  let today = new Date();
+  let currentMonth = today.getMonth();
+  let currentYear = today.getFullYear();
+
+  function renderCalendar(month, year) {
+    datesContainer.innerHTML = '';
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    monthYear.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    // Previous month's days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const dayDiv = document.createElement('div');
+      dayDiv.textContent = prevMonthDays - i;
+      dayDiv.classList.add('not-current');
+      datesContainer.appendChild(dayDiv);
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.textContent = day;
+
+      if (
+        day === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear()
+      ) {
+        dayDiv.classList.add('today');
+      }
+
+      datesContainer.appendChild(dayDiv);
+    }
+
+    // Next month days
+    const totalCells = firstDay + daysInMonth;
+    const nextDays = totalCells <= 35 ? 42 - totalCells : 49 - totalCells;
+    for (let i = 1; i <= nextDays; i++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.textContent = i;
+      dayDiv.classList.add('not-current');
+      datesContainer.appendChild(dayDiv);
+    }
+  }
+
+  prevBtn.addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    renderCalendar(currentMonth, currentYear);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    renderCalendar(currentMonth, currentYear);
+  });
+
+  // Create petals with random properties
+  function createPetals() {
+    const petalCount = 25;
+
+    for (let i = 0; i < petalCount; i++) {
+      const petal = document.createElement('div');
+      petal.classList.add('petal');
+
+      // Random horizontal start position
+      petal.style.left = Math.random() * 100 + 'vw';
+
+      // Random animation duration between 10-20s
+      const duration = 10 + Math.random() * 10;
+      petal.style.animationDuration = `${duration}s, ${duration / 3}s, ${duration / 2}s`;
+
+      // Random animation delay to stagger petals
+      petal.style.animationDelay = `${Math.random() * duration}s, 0s, 0s`;
+
+      // Random scale to vary size
+      const scale = 0.5 + Math.random();
+      petal.style.transform = `scale(${scale})`;
+
+      petalsContainer.appendChild(petal);
+    }
+  }
+
+  createPetals();
+  renderCalendar(currentMonth, currentYear);
+</script>
+
+</body>
+</html>
