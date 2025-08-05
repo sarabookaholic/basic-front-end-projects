@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tic Tac Toe - Player vs Computer</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #e9ecef;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: #333;
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  #gameStatus {
+    margin-bottom: 15px;
+    font-size: 20px;
+    min-height: 28px;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 8px;
+  }
+  .cell {
+    background: white;
+    border: 2px solid #007BFF;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  .cell:hover {
+    background-color: #d0e7ff;
+  }
+  .cell.disabled {
+    cursor: default;
+    background-color: #f8f9fa;
+  }
+  #resetBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #resetBtn:hover {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tic Tac Toe</h1>
+<div id="gameStatus">Player X's turn</div>
+
+<div id="board"></div>
+
+<button id="resetBtn">Restart Game</button>
+
+<script>
+  const boardEl = document.getElementById('board');
+  const statusEl = document.getElementById('gameStatus');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let board = ['', '', '', '', '', '', '', '', ''];
+  let currentPlayer = 'X';
+  let gameActive = true;
+  const humanPlayer = 'X';
+  const computerPlayer = 'O';
+
+  // Winning combos
+  const winningCombos = [
+    [0,1,2], [3,4,5], [6,7,8],
+    [0,3,6], [1,4,7], [2,5,8],
+    [0,4,8], [2,4,6]
+  ];
+
+  function createBoard() {
+    boardEl.innerHTML = '';
+    board.forEach((cell, index) => {
+      const cellEl = document.createElement('div');
+      cellEl.classList.add('cell');
+      cellEl.dataset.index = index;
+      cellEl.textContent = cell;
+      if (cell !== '') {
+        cellEl.classList.add('disabled');
+      }
+      cellEl.addEventListener('click', onCellClick);
+      boardEl.appendChild(cellEl);
+    });
+  }
+
+  function onCellClick(e) {
+    const index = e.target.dataset.index;
+    if (board[index] !== '' || !gameActive || currentPlayer !== humanPlayer) return;
+
+    makeMove(index, humanPlayer);
+    if (gameActive) {
+      statusEl.textContent = "Computer's turn...";
+      // Delay computer move for better UX
+      setTimeout(() => {
+        computerPlay();
+      }, 600);
+    }
+  }
+
+  function makeMove(index, player) {
+    board[index] = player;
+    updateBoard();
+    if (checkResult(player)) {
+      gameActive = false;
+      statusEl.textContent = player === humanPlayer ? "You win! 🎉" : "Computer wins! 💻";
+      highlightWinCells(player);
+      return true;
+    }
+
+    if (!board.includes('')) {
+      gameActive = false;
+      statusEl.textContent = "It's a draw! 🤝";
+      return true;
+    }
+
+    currentPlayer = (player === humanPlayer) ? computerPlayer : humanPlayer;
+    if (gameActive) {
+      statusEl.textContent = currentPlayer === humanPlayer ? "Player X's turn" : "Computer's turn...";
+    }
+    return false;
+  }
+
+  function updateBoard() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach((cell, i) => {
+      cell.textContent = board[i];
+      if (board[i] !== '') {
+        cell.classList.add('disabled');
+      } else {
+        cell.classList.remove('disabled');
+        cell.style.backgroundColor = '';
+        cell.style.color = '#333';
+      }
+    });
+  }
+
+  function checkResult(player) {
+    return winningCombos.some(combo => {
+      return combo.every(index => board[index] === player);
+    });
+  }
+
+  function highlightWinCells(player) {
+    winningCombos.forEach(combo => {
+      if (combo.every(index => board[index] === player)) {
+        combo.forEach(index => {
+          const cell = boardEl.querySelector(`.cell[data-index='${index}']`);
+          cell.style.backgroundColor = '#28a745';
+          cell.style.color = 'white';
+        });
+      }
+    });
+  }
+
+  function computerPlay() {
+    // Simple AI: random empty spot
+    const emptyIndices = board
+      .map((val, idx) => val === '' ? idx : null)
+      .filter(val => val !== null);
+
+    if (emptyIndices.length === 0) return;
+
+    // Pick random empty cell
+    const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    makeMove(randomIndex, computerPlayer);
+  }
+
+  function resetGame() {
+    board = ['', '', '', '', '', '', '', '', ''];
+    currentPlayer = humanPlayer;
+    gameActive = true;
+    statusEl.textContent = "Player X's turn";
+    createBoard();
+    // Reset cell colors
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      cell.style.backgroundColor = '';
+      cell.style.color = '#333';
+    });
+  }
+
+  resetBtn.addEventListener('click', resetGame);
+
+  createBoard();
+</script>
+
+</body>
+</html>
