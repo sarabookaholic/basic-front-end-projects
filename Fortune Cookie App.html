@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fortune Cookie App</title>
+  <style>
+    body {
+      background: #fdf6e3;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 320px;
+      background: #fff3d0;
+      border-radius: 16px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      padding: 30px 20px 40px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #c97c00;
+    }
+
+    .cookie {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 30px;
+      cursor: pointer;
+      perspective: 600px;
+    }
+
+    /* Cookie base */
+    .cookie-base {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #f3c976 45%, #d9a443 85%);
+      border-radius: 50%;
+      box-shadow:
+        inset 0 -8px 12px #d9a443,
+        0 4px 6px rgba(0,0,0,0.15);
+      position: relative;
+      transition: transform 0.7s ease;
+      transform-style: preserve-3d;
+    }
+
+    /* Crack lines */
+    .crack {
+      position: absolute;
+      background: #b07c1f;
+      border-radius: 2px;
+      opacity: 0;
+      transition: opacity 0.7s ease;
+    }
+
+    /* Different cracks */
+    .crack1 {
+      width: 6px;
+      height: 40px;
+      top: 35px;
+      left: 72px;
+      transform: rotate(15deg);
+    }
+    .crack2 {
+      width: 4px;
+      height: 30px;
+      top: 80px;
+      left: 80px;
+      transform: rotate(-25deg);
+    }
+    .crack3 {
+      width: 5px;
+      height: 25px;
+      top: 65px;
+      left: 65px;
+      transform: rotate(45deg);
+    }
+
+    /* Open animation */
+    .cookie.open .cookie-base {
+      transform: rotateY(45deg) rotateX(20deg);
+      box-shadow:
+        inset 0 -8px 12px #b08515,
+        0 6px 10px rgba(0,0,0,0.3);
+    }
+
+    .cookie.open .crack {
+      opacity: 1;
+    }
+
+    /* Message box */
+    .message {
+      min-height: 60px;
+      font-style: italic;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #755000;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #fff7d1;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.1);
+      user-select: text;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Reset button */
+    button.reset-btn {
+      margin-top: 25px;
+      padding: 10px 18px;
+      font-size: 1rem;
+      background: #c97c00;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(201,124,0,0.7);
+      transition: background 0.3s ease;
+    }
+
+    button.reset-btn:hover {
+      background: #a46100;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fortune Cookie</h1>
+    <div class="cookie" id="cookie" title="Click to open">
+      <div class="cookie-base"></div>
+      <div class="crack crack1"></div>
+      <div class="crack crack2"></div>
+      <div class="crack crack3"></div>
+    </div>
+    <div class="message" id="message"></div>
+    <button class="reset-btn" id="resetBtn" style="display:none;">Try Again</button>
+  </div>
+
+  <script>
+    const cookie = document.getElementById('cookie');
+    const message = document.getElementById('message');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const fortunes = [
+  "Your smile will tell you what makes you feel good.",
+  "Adventure awaits those who seek it.",
+  "A fresh start will put you on your way.",
+  "Trust your instincts; they never lie.",
+  "Happiness is a journey, not a destination.",
+  "You will soon find what you have been looking for.",
+  "Good things come to those who wait.",
+  "New opportunities are around the corner.",
+  "Your kindness will lead to great rewards.",
+  "Believe in yourself and others will too.",
+  "You are about to embark on a wonderful journey.",
+  "Fortune favors the bold.",
+  "The best is yet to come.",
+  "Challenges are opportunities in disguise.",
+  "Be patient; success will come soon.",
+  "Your hard work will be recognized.",
+  "A pleasant surprise is waiting for you.",
+  "You will make a difference in someone’s life.",
+  "Courage will carry you through difficult times.",
+  "Love and happiness are headed your way.",
+  "Today is a perfect day to try something new.",
+  "Your positive energy will attract great people.",
+  "Unexpected wealth will find you soon.",
+  "A new friendship will brighten your life.",
+  "Take time to enjoy the little things.",
+  "The answers you seek are within yourself.",
+  "Your creativity will open new doors.",
+  "Success is a series of small wins.",
+  "You will overcome challenges with grace.",
+  "A kind heart brings endless blessings.",
+  "Opportunities multiply as they are seized.",
+  "Happiness begins with a grateful heart.",
+  "Trust the timing of your life.",
+  "New adventures will enrich your soul.",
+  "Your efforts will be rewarded handsomely.",
+  "Something wonderful is about to happen.",
+  "Listen closely to your intuition today.",
+  "You have the power to create change.",
+  "A great day for learning and growth.",
+  "Your compassion will inspire others.",
+  "Big things often start small.",
+  "Embrace change; it leads to growth.",
+  "A joyful surprise is on its way.",
+  "Your courage inspires those around you.",
+  "Success comes to those who persevere.",
+  "Be open to new ideas and people.",
+  "The future is bright for you.",
+  "Your talents will shine through soon.",
+  "Kindness is the language of the soul.",
+  "New ideas will spark your creativity.",
+  "Believe in miracles; they happen daily.",
+  "Your smile will brighten someone’s day.",
+  "Take a chance and follow your dreams.",
+  "You will find peace in unexpected places.",
+  "Challenges make you stronger.",
+  "Your positive attitude is contagious.",
+  "Embrace your uniqueness; it’s your strength.",
+  "A new journey is about to begin.",
+  "You will find success in your passions.",
+  "Trust your heart to guide you.",
+  "Every day is a chance to grow.",
+  "You are capable of amazing things.",
+  "Joy comes from within.",
+  "Your generosity will be returned tenfold.",
+  "Take time to nurture your spirit.",
+  "A fresh perspective will bring clarity.",
+  "Your dreams are within reach.",
+  "Hard work pays off in time.",
+  "Today is the start of something great.",
+  "Your wisdom will help others.",
+  "Happiness follows those who seek it.",
+  "A smile is your best accessory.",
+  "New friendships will blossom soon.",
+  "Your determination will break barriers.",
+  "Believe in your infinite potential.",
+  "Take time to celebrate small wins.",
+  "Peace begins with a gentle heart.",
+  "Your kindness will create ripples of love.",
+  "You are surrounded by positive energy.",
+  "Trust yourself to make the right choice.",
+  "You will be surprised by your own strength.",
+  "Great things come to those who wait.",
+  "Your passion will light the way.",
+  "A surprise gift is headed your way.",
+  "Embrace the possibilities ahead.",
+  "Your laughter is infectious.",
+  "You will find answers when you listen.",
+  "New beginnings bring exciting opportunities.",
+  "Your courage will lead to success.",
+  "Joy and prosperity are yours.",
+  "A kind word can change a life.",
+  "Believe in your dreams, they know the way.",
+  "The universe supports your goals.",
+  "Your heart knows the path.",
+  "Take time to appreciate beauty today.",
+  "Your honesty will build lasting trust.",
+  "Every moment is a fresh beginning.",
+  "Your light shines bright in dark times.",
+  "Adventure is just around the corner.",
+  "Love surrounds you now and always.",
+  "Your efforts will soon be rewarded in unexpected ways.",
+  "Embrace the unknown—it holds great potential.",
+  "A cheerful attitude will brighten your day.",
+  "You are destined for greatness in your endeavors.",
+  "Unexpected kindness will come your way.",
+  "Take time to listen; wisdom will find you.",
+  "A new idea will bring you success.",
+  "You have the strength to overcome any obstacle.",
+  "Good fortune is on your doorstep.",
+  "Today is the day to take a leap of faith.",
+  "A friend will bring you good news soon.",
+  "Your creativity will lead to exciting ventures.",
+  "Patience will bring you the rewards you deserve.",
+  "Joy comes to those who spread kindness.",
+  "You will soon embark on a journey of self-discovery.",
+  "Your positive thoughts create positive outcomes.",
+  "The answers you seek are closer than you think.",
+  "A surprise opportunity will come knocking.",
+  "Happiness begins with a single step forward.",
+  "Trust your inner voice—it guides you well.",
+  "You will find peace in unexpected places.",
+  "Your passion will inspire those around you.",
+  "Take time for yourself; renewal is near.",
+  "The best way to predict your future is to create it.",
+  "You will make a lasting impression today.",
+  "Good luck will follow you wherever you go.",
+  "Challenges are stepping stones to success.",
+  "Your hard work plants seeds for tomorrow’s success.",
+  "A meaningful connection is just ahead.",
+  "Your intuition will lead to important discoveries.",
+  "Be open to the lessons the day brings.",
+  "Your kindness will open many doors.",
+  "New experiences will bring you joy.",
+  "Your dreams are within reach—keep moving forward.",
+  "Success favors those who persevere.",
+  "A small act of kindness will make a big difference.",
+  "Your journey will be filled with wonderful surprises.",
+  "Listen closely; important messages come through quiet moments.",
+  "You are stronger than you realize.",
+  "Take time to appreciate your achievements.",
+  "An exciting adventure awaits you.",
+  "Your generosity will come back to you multiplied.",
+  "Believe in yourself and watch magic happen.",
+  "New friendships will bring happiness soon.",
+  "Good things are coming—stay positive.",
+  "Your smile is a beacon to others.",
+  "You will soon discover a hidden talent.",
+  "Life will reward your patience and effort.",
+  "A fresh perspective will help you solve a problem.",
+  "You have a gift that the world needs.",
+  "Joy is found in simple moments.",
+  "Your heart will guide you to happiness.",
+  "Take a chance on something new today.",
+  "Your efforts will create a lasting impact.",
+  "A beautiful surprise is in store.",
+  "Believe in miracles; they happen every day.",
+  "You will inspire others with your actions.",
+  "New opportunities will open doors for you.",
+  "Your positive energy attracts wonderful people.",
+  "Be patient; your time to shine is near.",
+  "Your kindness will change someone’s life.",
+  "The future holds exciting possibilities.",
+  "Your courage will help you overcome challenges.",
+  "A lucky break is coming your way.",
+  "Take time to recharge—you deserve it.",
+  "You are on the path to great success.",
+  "Your determination will lead you to victory.",
+  "A joyful moment will brighten your day.",
+  "Your wisdom will guide others.",
+  "Good fortune follows those who act with kindness.",
+  "You will find beauty in unexpected places.",
+  "The universe is aligning in your favor.",
+  "Your creativity will solve a pressing problem.",
+  "Celebrate your progress, no matter how small.",
+  "You will soon receive good news.",
+  "Your positive attitude opens doors.",
+  "Be bold; your dreams are worth chasing.",
+  "You will attract positive opportunities today.",
+  "A new friendship will enrich your life.",
+  "Your generosity brings happiness.",
+  "Trust the process—it is working for you.",
+  "You have the power to create change.",
+  "Your smile will brighten the darkest day.",
+  "You will find joy in helping others.",
+  "A surprise gift will come your way soon.",
+  "Your future is as bright as your faith.",
+  "Love and happiness are headed your way.",
+  "Your ideas will lead to success.",
+  "New beginnings bring fresh opportunities.",
+  "You will find the answers you seek.",
+  "Good things come to those who wait patiently.",
+  "Your talents will shine in unexpected ways.",
+  "Stay hopeful—great things are coming.",
+  "You will overcome a challenge with grace.",
+  "A meaningful connection is near.",
+  "You are about to discover something wonderful.",
+  "Your hard work will be rewarded soon.",
+  "A smile will bring you unexpected happiness.",
+  "The best days are ahead of you.",
+  "Your kindness makes the world a better place.",
+  "Great adventures await you.",
+  "Trust in yourself and all will be well."
+];
+
+
+    let opened = false;
+
+    cookie.addEventListener('click', () => {
+      if (opened) return;
+
+      // Add class to animate open
+      cookie.classList.add('open');
+
+      // Show a random fortune after animation delay
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * fortunes.length);
+        message.textContent = `"${fortunes[randomIndex]}"`;
+        resetBtn.style.display = 'inline-block';
+      }, 700);
+
+      opened = true;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      // Reset
+      cookie.classList.remove('open');
+      message.textContent = '';
+      resetBtn.style.display = 'none';
+      opened = false;
+    });
+  </script>
+</body>
+</html>
