@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Space Shooter</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    color: white;
+    font-family: monospace;
+    user-select: none;
+  }
+  #gameCanvas {
+    background: #000;
+    display: block;
+    margin: 0 auto;
+    border: 2px solid white;
+  }
+  #score {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+  }
+  #restartBtn {
+    position: fixed;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    font-size: 20px;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: none;
+  }
+  #restartBtn:hover {
+    background: #ddd;
+  }
+</style>
+</head>
+<body>
+
+<div id="score">Score: 0</div>
+<button id="restartBtn">Restart</button>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const shipWidth = 40;
+  const shipHeight = 20;
+  const bulletWidth = 4;
+  const bulletHeight = 10;
+  const enemyWidth = 30;
+  const enemyHeight = 20;
+
+  let shipX, leftPressed, rightPressed, spacePressed;
+  let bullets, enemies, enemySpeed, score, gameOver;
+  let lastShotTime, lastEnemySpawn;
+
+  function init() {
+    shipX = (canvas.width - shipWidth) / 2;
+    leftPressed = false;
+    rightPressed = false;
+    spacePressed = false;
+    bullets = [];
+    enemies = [];
+    enemySpeed = 1;
+    score = 0;
+    gameOver = false;
+    lastShotTime = 0;
+    lastEnemySpawn = 0;
+    document.getElementById('score').textContent = 'Score: 0';
+    restartBtn.style.display = 'none';
+  }
+
+  // Player controls
+  document.addEventListener('keydown', e => {
+    if (e.code === 'ArrowLeft') leftPressed = true;
+    if (e.code === 'ArrowRight') rightPressed = true;
+    if (e.code === 'Space') spacePressed = true;
+  });
+
+  document.addEventListener('keyup', e => {
+    if (e.code === 'ArrowLeft') leftPressed = false;
+    if (e.code === 'ArrowRight') rightPressed = false;
+    if (e.code === 'Space') spacePressed = false;
+  });
+
+  function drawShip() {
+    ctx.fillStyle = 'lightblue';
+    ctx.beginPath();
+    ctx.moveTo(shipX, canvas.height - shipHeight - 10 + shipHeight);
+    ctx.lineTo(shipX + shipWidth / 2, canvas.height - shipHeight - 10);
+    ctx.lineTo(shipX + shipWidth, canvas.height - shipHeight - 10 + shipHeight);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawBullet(bullet) {
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(bullet.x, bullet.y, bulletWidth, bulletHeight);
+  }
+
+  function drawEnemy(enemy) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(enemy.x, enemy.y, enemyWidth, enemyHeight);
+  }
+
+  function updateShip() {
+    if (leftPressed) shipX -= 5;
+    if (rightPressed) shipX += 5;
+
+    if (shipX < 0) shipX = 0;
+    if (shipX + shipWidth > canvas.width) shipX = canvas.width - shipWidth;
+  }
+
+  function updateBullets() {
+    bullets.forEach((bullet, i) => {
+      bullet.y -= 7;
+      if (bullet.y + bulletHeight < 0) {
+        bullets.splice(i, 1);
+      }
+    });
+  }
+
+  function updateEnemies() {
+    enemies.forEach((enemy, i) => {
+      enemy.y += enemySpeed;
+
+      if (enemy.y > canvas.height) {
+        enemies.splice(i, 1);
+        gameOver = true;
+      }
+    });
+  }
+
+  function spawnEnemy() {
+    const x = Math.random() * (canvas.width - enemyWidth);
+    enemies.push({ x, y: -enemyHeight });
+  }
+
+  function detectCollisions() {
+    bullets.forEach((bullet, bIndex) => {
+      enemies.forEach((enemy, eIndex) => {
+        if (
+          bullet.x < enemy.x + enemyWidth &&
+          bullet.x + bulletWidth > enemy.x &&
+          bullet.y < enemy.y + enemyHeight &&
+          bullet.y + bulletHeight > enemy.y
+        ) {
+          bullets.splice(bIndex, 1);
+          enemies.splice(eIndex, 1);
+          score += 10;
+          document.getElementById('score').textContent = 'Score: ' + score;
+        }
+      });
+    });
+  }
+
+  function shootBullet() {
+    const now = Date.now();
+    if (spacePressed && now - lastShotTime > 300) {
+      bullets.push({
+        x: shipX + shipWidth / 2 - bulletWidth / 2,
+        y: canvas.height - shipHeight - 10
+      });
+      lastShotTime = now;
+    }
+  }
+
+  function gameLoop() {
+    if (gameOver) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'white';
+      ctx.font = '48px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+      ctx.font = '24px monospace';
+      ctx.fillText('Final Score: ' + score, canvas.width / 2, canvas.height / 2 + 40);
+      restartBtn.style.display = 'block';
+      return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    updateShip();
+    shootBullet();
+    updateBullets();
+    updateEnemies();
+    detectCollisions();
+
+    drawShip();
+    bullets.forEach(drawBullet);
+    enemies.forEach(drawEnemy);
+
+    if (Date.now() - lastEnemySpawn > 1200) {
+      spawnEnemy();
+      lastEnemySpawn = Date.now();
+      if (enemySpeed < 5) enemySpeed += 0.05;
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  restartBtn.addEventListener('click', () => {
+    init();
+    gameLoop();
+  });
+
+  // Start the game
+  init();
+  gameLoop();
+</script>
+</body>
+</html>
